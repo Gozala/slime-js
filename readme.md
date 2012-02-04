@@ -3,7 +3,10 @@
 This repository contains source code for slime-js emacs plugin, providing
 integration with [swank-js] backend.
 
-You can install this slime-js plugin into your emacs from [marmalade-repo].
+You can install this slime-js plugin right out of your emacs (it should be
+connected to [marmalade-repo]).
+
+    M-x package-install slime-js
 
 In order to be able to do anything useful with this plugin you will need to
 run [swank-js] backend.
