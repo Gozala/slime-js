@@ -7,33 +7,56 @@
 ;; Keywords: js, languages, lisp, slime
 ;; Package-Requires: ((slime-repl "20100404") (slime "20100404"))
 
-;;; Copyright (c) 2010 Ivan Shvedunov. All rights reserved.
-;;;
-;;; Redistribution and use in source and binary forms, with or without
-;;; modification, are permitted provided that the following conditions
-;;; are met:
-;;;
-;;; * Redistributions of source code must retain the above copyright
-;;; notice, this list of conditions and the following disclaimer.
-;;;
-;;; * Redistributions in binary form must reproduce the above
-;;; copyright notice, this list of conditions and the following
-;;; disclaimer in the documentation and/or other materials
-;;; provided with the distribution.
-;;;
-;;; THIS SOFTWARE IS PROVIDED BY THE AUTHOR 'AS IS' AND ANY EXPRESSED
-;;; OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-;;; WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-;;; ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-;;; DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-;;; DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-;;; GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-;;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-;;; WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;;; Licence: 
+;; Copyright (c) 2010 Ivan Shvedunov. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions
+;; are met:
+;;
+;; * Redistributions of source code must retain the above copyright
+;; notice, this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above
+;; copyright notice, this list of conditions and the following
+;; disclaimer in the documentation and/or other materials
+;; provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE AUTHOR 'AS IS' AND ANY EXPRESSED
+;; OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+;; WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+;; DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+;; DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+;; GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+;; WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(require 'slime-repl)
+(defgroup slime-js nil "Slime Extension for Swank.js"
+  :group 'slime-js)
+
+(defcustom  slime-js-swank-command "npm"
+  "Command for running the swank-js server from node.js"
+  :type 'string
+  :group 'slime-js)
+
+(defcustom slime-js-swank-args '("run" "swank")
+  "Command arguments for running the swank-js server from node.js.
+Note that file paths need to be complete file paths, i.e. ~ to /home/you or /Uesrs/you."
+  :type '(repeat (string :tag "Arg"))
+  :group 'slime-js)
+
+(define-slime-contrib slime-js
+  "Emacs-side support for Swank-JS."
+  (:authors "Ivan Shvedunov")
+  (:license "X11-style")
+  (:slime-dependencies slime-repl)
+  (:on-load
+   (add-hook 'slime-event-hooks 'slime-js-event-hook-function))
+  (:on-unload
+   (remove-hook 'slime-event-hooks 'slime-js-event-hook-function)))
 
 (defun slime-js-repl-update-package ()
   (let ((name (slime-current-package)))
@@ -45,6 +68,14 @@
         (slime-repl-insert-prompt)
         (when (plusp previouse-point)
           (goto-char (+ previouse-point slime-repl-input-start-mark)))))))
+
+(defvar slime-js-swank-buffer 'nil)
+
+; Just the bare-simplest thing that can be done for now.
+(defun slime-js-run-swank ()
+  "Runs the swank side of the equation."
+  (interactive)
+  (setq slime-js-swank-buffer (apply #'make-comint "swank-js"  (expand-file-name slime-js-swank-command) nil slime-js-swank-args)))
 
 (defun slime-js-event-hook-function (event)
   (when (equal "JS" (slime-lisp-implementation-type))
@@ -89,20 +120,36 @@
   (interactive (list (slime-js-read-remote-index)))
   (slime-eval-async `(js:select-remote ,n nil)))
 
+(defslime-repl-shortcut slime-repl-js-select-remote ("select-remote")
+  (:handler 'slime-js-select-remote)
+  (:one-liner "Select JS remote."))
+
 (defun slime-js-sticky-select-remote (n)
   "Select JS remote by number in sticky mode"
   (interactive (list (slime-js-read-remote-index)))
   (slime-eval-async `(js:select-remote ,n t)))
+
+(defslime-repl-shortcut slime-repl-js-sticky-select-remote ("sticky-select-remote")
+  (:handler 'slime-js-sticky-select-remote)
+  (:one-liner "Select JS remote in sticky mode."))
 
 (defun slime-js-set-target-url (url)
   "Set target URL for the proxy"
   (interactive "sTarget URL: ")
   (slime-eval-async `(js:set-target-url ,url)))
 
+(defslime-repl-shortcut slime-repl-js-set-target-url ("target-url")
+  (:handler 'slime-js-set-target-url)
+  (:one-liner "Select target URL for the swank-js proxy"))
+
 (defun slime-js-set-slime-version (url)
   "Set SLIME version for swank-js"
   (interactive "sVersion: ")
   (slime-eval-async `(js:set-slime-version ,url)))
+
+(defslime-repl-shortcut slime-repl-js-set-slime-version ("js-slime-version")
+  (:handler 'slime-js-set-slime-version)
+  (:one-liner "Set SLIME version for swank-js"))
 
 ;; FIXME: should add an rpc command for browser-only eval
 
@@ -175,22 +222,6 @@
                  (setf sent-func (match-string 1)))
                (message "Sent: %s" sent-func))))))))
 
-(defslime-repl-shortcut slime-repl-js-select-remote ("select-remote")
-  (:handler 'slime-js-select-remote)
-  (:one-liner "Select JS remote."))
-
-(defslime-repl-shortcut slime-repl-js-sticky-select-remote ("sticky-select-remote")
-  (:handler 'slime-js-sticky-select-remote)
-  (:one-liner "Select JS remote in sticky mode."))
-
-(defslime-repl-shortcut slime-repl-js-set-target-url ("target-url")
-  (:handler 'slime-js-set-target-url)
-  (:one-liner "Select target URL for the swank-js proxy"))
-
-(defslime-repl-shortcut slime-repl-js-set-slime-version ("js-slime-version")
-  (:handler 'slime-js-set-slime-version)
-  (:one-liner "Set SLIME version for swank-js"))
-
 (define-minor-mode slime-js-minor-mode
   "Toggle slime-js minor mode
 With no argument, this command toggles the mode.
@@ -203,15 +234,6 @@ Null prefix argument turns off the mode."
     ;; ("\C-c\C-r" . slime-eval-region)
     ("\C-c\C-z" . slime-switch-to-output-buffer)))
 
-;;; Initialization 
-
-;;;###autoload
-(defun slime-js-init ()
-  (add-hook 'slime-event-hooks 'slime-js-event-hook-function))
-
-;;;###autoload
-(add-hook 'slime-load-hook 'slime-js-init)
-
 ;; TBD: dabbrev in repl:
 ;; DABBREV--GOTO-START-OF-ABBREV function skips over REPL prompt
 ;; because it has property 'intangible' and (forward-char -1) doesn't do
@@ -219,5 +241,3 @@ Null prefix argument turns off the mode."
 ;; or define and advice for it.
 ;; TBD: lost continuations (pipelined request ...) - maybe when closing page
 (provide 'slime-js)
-
-;;; slime-js.el ends here
