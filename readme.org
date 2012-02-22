@@ -1,0 +1,69 @@
+* Docco
+This repository contains source code for slime-js emacs plugin, providing integration with [[swank-js][https://github.com/Gozala/swank-js]] backend.
+
+** Installation 
+
+   There are 2 pieces to make this work:
+   
+   1. The Slime piece, You're looking at it.
+   2. the Swank piece.  
+
+*** Installing Slime.js
+    The best way to get this is to use package-install with Marmalade
+
+#+begin_example
+M-x package-install slime-js
+#+end_example
+
+
+**** Connecting to Marmalade:
+     What, you don't have marmalade as one of your package sources?
+     Are you NUTS?
+
+     For Emacs 24, getting Marmalade is easy peasy:
+
+#+begin_example
+(require 'package)
+
+(add-to-list 'package-archives
+
+             '("marmalade" . "http://marmalade-repo.org/packages/") t)
+(package-initialize)
+#+end_example
+
+	For emacs 23, the steps are similar, except you need to make sure you have the [[Latest package.el for Emacs 23][http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el]]
+
+*** Installing Swamk.js 
+    For the moment, Gozala's branch of swank.js includes an easy
+    install through NPM.  It looks hot.  Go get it.
+
+    Get Node.js: http://nodejs.org/
+    Get Swank.js: https://github.com/Gozala/swank-js 
+
+** Using 
+
+   There will be more documentation here soon.  For now, check the
+   docco at https://github.com/Gozala/swank-js 
+
+* Development
+
+       There is big item on the development hit list:
+
+** PROJECT Get rid of js2-mode dependency 
+   Some people prefer espresso!
+
+   here is a list of dependencies that need to be WHACKED:
+     - [ ] js2-mode-wait-for-parse
+       - [ ] js2-forward-sws 
+       - [ ] js2-mode-forward-sexp  (js--forward-expression?  js--forward-functon-decl?  )
+       - [ ] js2-node-at-point
+       - [ ] js2-ast-root-p
+       - [ ] js2-node-parent
+     - [ ] js2-node-abs-pos
+       - [ ] js2-node-abs-end
+     - [ ] js2-mode-buffer-dirty-p
+*** TODO Figure out why those functions are being used, and build a facade (of sorts)
+
+** PROJECT Better buffer handling of the swank connection
+*** TODO customize option to make the buffer invisible
+*** TODO add ansi-mode hook on it so that it looks nicer.
