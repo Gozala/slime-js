@@ -33,7 +33,7 @@ M-x package-install slime-js
 
 	For emacs 23, the steps are similar, except you need to make sure you have the [[Latest package.el for Emacs 23][http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el]]
 
-*** Installing Swamk.js 
+*** Installing Swank.js 
     For the moment, Gozala's branch of swank.js includes an easy
     install through NPM.  It looks hot.  Go get it.
 
